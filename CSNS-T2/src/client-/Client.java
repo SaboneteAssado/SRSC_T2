@@ -18,6 +18,7 @@ public class Client {
 
 		System.setProperty("javax.net.debug", "all");
 		
+		
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(System.in));
 		PrintStream out = System.out;
@@ -34,14 +35,14 @@ public class Client {
 				SSLContext ctx;
 				KeyManagerFactory kmf;
 				KeyStore ks;
-				//		char[] passphrase = "passphrase".toCharArray();
+				
 				char[] passphrase = "client1".toCharArray();//		
 
 				ctx = SSLContext.getInstance("TLS");
 				kmf = KeyManagerFactory.getInstance("SunX509");
 				ks = KeyStore.getInstance("JKS");
 
-				ks.load(new FileInputStream("clientkeystore.jks"), passphrase);
+				ks.load(new FileInputStream("client.jks"), passphrase);
 
 				kmf.init(ks, passphrase);
 				ctx.init(kmf.getKeyManagers(), null, null);
@@ -51,7 +52,6 @@ public class Client {
 				throw new IOException(e.getMessage());
 			}
 
-			f =  (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket c = (SSLSocket) f.createSocket(args[0], Integer.parseInt(args[1]));
 
 			

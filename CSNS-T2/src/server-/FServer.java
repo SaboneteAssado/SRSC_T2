@@ -18,7 +18,7 @@ import javax.net.ssl.SSLSocket;
 
 public class FServer {
 
-	private static final String SERVERTLS_CONFIG_PATH = "/home/sd2018/eclipse-workspace/CSNS-T2/src/server-/servertls.conf";
+	private static final String SERVERTLS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/servertls.conf";
 	private static Properties properties;
 
 	public static void main(String[] args) {
@@ -76,11 +76,25 @@ public class FServer {
 			BufferedReader r = new BufferedReader(new InputStreamReader(
 					c.getInputStream()));
 
-
-			String m = "Hi !";
+			
+			
+			String m = "Hi! Please introduce your credentials";
 			w.write(m,0,m.length());
 			w.newLine();
 			w.flush();
+			
+			m = r.readLine();
+			String[] arr = m.split(" ");
+			
+			m = arr [0];
+			w.write(m,0,m.length());
+			
+			while ((m=r.readLine())!= "logout") {
+				
+				
+				
+				
+			}
 
 			w.close();
 			r.close();
