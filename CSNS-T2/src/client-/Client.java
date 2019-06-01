@@ -54,8 +54,6 @@ public class Client {
 
 			SSLSocket c = (SSLSocket) f.createSocket(args[0], Integer.parseInt(args[1]));
 
-			
-			
 			c.startHandshake();
 
 			BufferedWriter w = new BufferedWriter(
@@ -64,7 +62,8 @@ public class Client {
 					new InputStreamReader(c.getInputStream()));
 
 			String m = null;
-			while ((m=r.readLine())!= "!quit") {
+			
+			while ((m=r.readLine())!= null) {
 				out.println(m);
 				m = in.readLine();
 				System.out.println("input:"+ m);

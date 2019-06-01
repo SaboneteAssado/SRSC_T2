@@ -24,7 +24,7 @@ public class FServer {
 	public static void main(String[] args) {
 
 		System.setProperty("javax.net.debug", "all");   
-		
+
 		try {
 			properties = loadProperties(SERVERTLS_CONFIG_PATH);
 		} catch (IOException e1) {
@@ -46,10 +46,10 @@ public class FServer {
 			ks.load(new FileInputStream(ksName), ksPass);
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, ctPass);
-			
+
 			SSLContext sc = SSLContext.getInstance("TLS");
 			sc.init(kmf.getKeyManagers(), null, null);
-			
+
 			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);
 
@@ -61,38 +61,98 @@ public class FServer {
 				String[] protocols={"TLSv1.2"};
 				s.setEnabledProtocols(protocols);
 			}
-			
+
 			s.setEnabledCipherSuites(confciphersuites);
+
+			if ( authType.equals("MUTUAL")) {
+				s.setNeedClientAuth(true);
+			}
 
 			System.out.println("Server ready...");
 			SSLSocket c = (SSLSocket) s.accept();
-
-			if ( authType.equals("MUTUAL")) {
-
-			}
 
 			BufferedWriter w = new BufferedWriter(new OutputStreamWriter(
 					c.getOutputStream()));
 			BufferedReader r = new BufferedReader(new InputStreamReader(
 					c.getInputStream()));
 
-			
-			
-			String m = "Hi! Please introduce your credentials";
+
+
+			String m = "Welcome!";
 			w.write(m,0,m.length());
 			w.newLine();
 			w.flush();
-			
-			m = r.readLine();
-			String[] arr = m.split(" ");
-			
-			m = arr [0];
-			w.write(m,0,m.length());
-			
-			while ((m=r.readLine())!= "logout") {
-				
-				
-				
+
+			while ( (m=r.readLine())!= null ) {
+
+
+				if (m.equals("logout")) break;
+
+				String[] arr = m.split(" ");
+
+				if ( arr[0].equals("login") ) {
+					if ( arr.length != 3) {
+						String username = arr[1];
+						String pw = arr[2];
+					}
+					else {
+						m = "arg size != 3";
+						w.write(m,0,m.length());
+					}
+				}
+
+				else if ( arr[0].equals("ls") ) {
+					String username = arr[1];
+				}
+
+				else if ( arr[0].equals("put") ) {
+					if ( arr.length != 3) {
+						String username = arr[1];
+						String path = arr[2];
+					}
+					else {
+						m = "arg size != 3";
+						w.write(m,0,m.length());
+					}
+					
+				}
+
+				else if ( arr[0].equals("get") ) {
+					if ( arr.length != 3) {
+						String username = arr[1];
+						String path = arr[2];
+					}
+					else {
+						m = "arg size != 3";
+						w.write(m,0,m.length());
+					}
+				}
+
+				else if ( arr[0].equals("cp") ) {
+					if ( arr.length != 4) {
+						String username = arr[1];
+						String path1 = arr[2];
+						String path2 = arr[3];
+					}
+					else {
+						m = "arg size != 4";
+						w.write(m,0,m.length());
+					}
+				}
+
+				else if ( arr[0].equals("rm") ) {
+					if ( arr.length != 3) {
+						String username = arr[1];
+						String path = arr[2];
+					}
+					else {
+						m = "arg size != 3";
+						w.write(m,0,m.length());
+					}
+				}
+
+				w.newLine();
+				w.flush();
 				
 			}
 
