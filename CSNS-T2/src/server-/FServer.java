@@ -104,22 +104,17 @@ public class FServer {
 
 							tempc.startHandshake();
 
-							System.out.println("handshaked");
 							BufferedWriter tempw = new BufferedWriter(new OutputStreamWriter(
 									tempc.getOutputStream()));
 							BufferedReader tempr = new BufferedReader(new InputStreamReader(
 									tempc.getInputStream()));
 
-
-							System.out.println("crieiwriters");
 							m = username + " " + pw;
 
-							System.out.println("valor de m = " + m);
 							tempw.write(m,0,m.length());
 							tempw.newLine();
 							tempw.flush();
 
-							System.out.println("esperando resposta de auth");
 							m = tempr.readLine();
 
 							//check
@@ -128,8 +123,8 @@ public class FServer {
 
 							String[] tmp = m.split(":");
 							if ( tmp[5].equals("FALSE")) {
-								System.out.println("failed login");
-								m = "Login failed :(";
+								System.out.println("Failed Login Attempt");
+								m = "LoginFailed";
 								w.write(m,0,m.length());
 							}
 							else {
@@ -137,7 +132,7 @@ public class FServer {
 								byte[] bytes = new byte[2048];
 								random.nextBytes(bytes);
 								tokens.put( tmp[1],(System.currentTimeMillis() + 300000) + " " + bytes );
-								m = "Success " + bytes;
+								m = "LoginSuccess " + bytes;
 								w.write(m, 0, m.length());
 								System.out.println(m);
 							}

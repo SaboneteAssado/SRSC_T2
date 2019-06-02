@@ -17,7 +17,8 @@ import javax.net.ssl.SSLSocket;
 public class FServerAccessControl {
 
 	private static final String SERVERTLS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/servertls.conf";
-	private static Properties properties, ;
+	private static final String ACCESS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/access.conf";
+	private static Properties properties, accessprops;
 
 
 	public static void main(String[] args) {
@@ -25,15 +26,16 @@ public class FServerAccessControl {
 
 		try {
 			properties = loadProperties(SERVERTLS_CONFIG_PATH);
+			accessprops = loadProperties(ACCESS_CONFIG_PATH);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
-		String ksName = "fserverauth.jks";
-		char[]  ksPass = "fserverauth1".toCharArray();   // password da keystore
-		char[]  ctPass = "fserverauth1".toCharArray();  // password entry
-		int port= Integer.parseInt("9001");
+		String ksName = "fserveraccess.jks";
+		char[]  ksPass = "fserveraccess1".toCharArray();   // password da keystore
+		char[]  ctPass = "fserveraccess1".toCharArray();  // password entry
+		int port= Integer.parseInt("9002");
 		String[] confciphersuites= {properties.getProperty("CIPHERSUITS")};
 		String confprotocols=properties.getProperty("TLS-PROT-ENF");
 
@@ -67,6 +69,21 @@ public class FServerAccessControl {
 					c.getOutputStream()));
 			BufferedReader r = new BufferedReader(new InputStreamReader(
 					c.getInputStream()));
+			
+			String m = null;
+			while ( true ) {
+				
+				m = r.readLine();
+				
+				m =  accessprops.getProperty(m);
+				
+				w.write(m,0,m.length());
+				w.newLine();
+				w.flush();
+				System.out.println("Access checked... waiting");
+			}
+			
+			
 		}catch (Exception e) {
 			System.err.println(e.toString());
 		}

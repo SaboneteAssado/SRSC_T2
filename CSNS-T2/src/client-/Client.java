@@ -69,10 +69,16 @@ public class Client {
 				
 				arr = m.split(" ");
 				
-				if ( arr[0].equals("Success") ) {
+				if ( arr[0].equals("LoginSuccess") ) {
 					token = arr[1];
-					out.println("operaçao a funcionar");
+					System.out.println("Successful Login Attempt");
 				}
+				if ( arr[0].equals("LoginFailed") ) {
+					System.out.println("Failed Login Attempt");
+				}
+				
+				
+				
 				
 				out.println(m);
 				m = in.readLine();
