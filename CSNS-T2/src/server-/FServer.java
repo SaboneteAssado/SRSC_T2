@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.security.KeyStore;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -15,6 +16,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 public class FServer {
 
@@ -39,6 +41,7 @@ public class FServer {
 		String[] confciphersuites= {properties.getProperty("CIPHERSUITS")};
 		String confprotocols=properties.getProperty("TLS-PROT-ENF");
 		String authType = properties.getProperty("TLS-AUTH");
+		ArrayList<String> tokens = new ArrayList<String>();
 
 		try {
 			//ver
@@ -94,6 +97,34 @@ public class FServer {
 					if ( arr.length != 3) {
 						String username = arr[1];
 						String pw = arr[2];
+						
+						SSLSocketFactory f = sc.getSocketFactory();
+						SSLSocket tempc = (SSLSocket) f.createSocket("localhost", 9001 );
+					
+						tempc.startHandshake();
+						
+						BufferedWriter tempw = new BufferedWriter(new OutputStreamWriter(
+								c.getOutputStream()));
+						BufferedReader tempr = new BufferedReader(new InputStreamReader(
+								c.getInputStream()));
+						
+						m = username + " " + pw;
+						tempw.write(m,0,m.length());
+						w.newLine();
+						w.flush();
+						m = tempr.readLine();
+						
+						if ( m.equals("FALSE")) {
+							m = "Login failed :(";
+							w.write(m,0,m.length());
+						}
+						else {
+							tokens.add( (System.currentTimeMillis() + 300000) + " " + m);
+							m = "Success " + m;
+							w.write(m, 0, m.length());
+						}
+						
+						
 					}
 					else {
 						m = "arg size != 3";

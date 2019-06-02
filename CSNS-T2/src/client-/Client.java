@@ -18,11 +18,13 @@ public class Client {
 
 		System.setProperty("javax.net.debug", "all");
 		
-		
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(System.in));
 		PrintStream out = System.out;
 
+		String token = null;
+		boolean loggedin = false;
+		
 		try {
 
 			/*
@@ -64,6 +66,13 @@ public class Client {
 			String m = null;
 			
 			while ((m=r.readLine())!= null) {
+				
+				String[] arr = m.split(" ");
+				if ( arr[0].equals("Success") ) {
+					loggedin = true;
+					token = arr[1];
+				}
+				
 				out.println(m);
 				m = in.readLine();
 				System.out.println("input:"+ m);
