@@ -32,12 +32,13 @@ public class FServerAuth {
 
 		//efeito de teste (1 utilizador pode-se add +)
 		String username = "miguel";
+		String email = "miguel@g.com";
+		String nome = "Miguel Araujo";
 		byte[] salt = generateSalt();
 		byte[] pw = getEncryptedPassword("araujo", salt);
-		HashMap < String, byte[] > accounts = new HashMap<String, byte[] >();
-		accounts.put( username, pw);
-		HashMap < String, byte[] > salts = new HashMap<String, byte[] >();
-		salts.put( username, salt);
+		
+		HashMap < String, Account > accounts = new HashMap<String, Account >();
+		accounts.put( username, new Account(username, email, nome, pw, salt));
 
 		//debug
 		System.setProperty("javax.net.debug", "all");   
@@ -49,9 +50,9 @@ public class FServerAuth {
 			e1.printStackTrace();
 		}
 
-		String ksName = "fserver.jks";
-		char[]  ksPass = "fserver1".toCharArray();   // password da keystore
-		char[]  ctPass = "fserver1".toCharArray();  // password entry
+		String ksName = "fserverauth.jks";
+		char[]  ksPass = "fserverauth1".toCharArray();   // password da keystore
+		char[]  ctPass = "fserverauth1".toCharArray();  // password entry
 		int port= Integer.parseInt("9001");
 		String[] confciphersuites= {properties.getProperty("CIPHERSUITS")};
 		String confprotocols=properties.getProperty("TLS-PROT-ENF");
@@ -66,7 +67,7 @@ public class FServerAuth {
 			sc.init(kmf.getKeyManagers(), null, null);
 
 			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);	
+			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);
 
 			if ( confprotocols.equals("TLS-1.1") ) {
 				String[] protocols={"TLSv1.1"};
@@ -87,23 +88,27 @@ public class FServerAuth {
 			BufferedReader r = new BufferedReader(new InputStreamReader(
 					c.getInputStream()));
 
+			String m = null;
 			while ( true ) {
-				String m = r.readLine();
+				
+				m = r.readLine();
 				String[] arr = m.split(" ");
-
+				
 				username = arr[0];
-				pw = accounts.get(username);
-				if ( authenticate(arr[1], pw, salts.get(username)) ) {
-					SecureRandom random = new SecureRandom();
-					byte bytes[] = new byte[2048];
-					random.nextBytes(bytes);
-					m = bytes.toString();
+				Account acc = accounts.get(username);
+				
+				if ( authenticate(arr[1], acc.getPw(), acc.getSalt()) ) {
+					m = username + ":" + email + ":" + nome + ":" + acc.getPw() + ":" + acc.getSalt() + ":" + "TRUE";
+					System.out.println(m);
 				}
-				else m = "FALSE";
+				else {
+					m = "FALSE";
+				}
 
 				w.write(m,0,m.length());
 				w.newLine();
 				w.flush();
+				System.out.println("Auth finished, waiting");
 			}
 
 		}catch (Exception e) {
@@ -163,6 +168,41 @@ public class FServerAuth {
 		random.nextBytes(salt);
 
 		return salt;
+	}
+
+	private static class Account {
+
+		String username,email, nome;
+		byte[] pw, salt;
+
+		public Account ( String username, String email, String nome, byte[] pw, byte[] salt ) {
+			this.username = username;
+			this.email = email;
+			this.nome = nome;
+			this.pw = pw;
+			this.salt = salt;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public String getEmail() {
+			return email;
+		}
+
+		public String getNome() {
+			return nome;
+		}
+
+		public byte[] getPw() {
+			return pw;
+		}
+
+		public byte[] getSalt() {
+			return salt;
+		}
+
 	}
 }
 

@@ -23,7 +23,6 @@ public class Client {
 		PrintStream out = System.out;
 
 		String token = null;
-		boolean loggedin = false;
 		
 		try {
 
@@ -64,22 +63,36 @@ public class Client {
 					new InputStreamReader(c.getInputStream()));
 
 			String m = null;
+			String[] arr = null;
 			
 			while ((m=r.readLine())!= null) {
 				
-				String[] arr = m.split(" ");
+				arr = m.split(" ");
+				
 				if ( arr[0].equals("Success") ) {
-					loggedin = true;
 					token = arr[1];
+					out.println("operaçao a funcionar");
 				}
 				
 				out.println(m);
 				m = in.readLine();
-				System.out.println("input:"+ m);
-
-				w.write(m,0,m.length());
+				arr = m.split(" ");
+				
+				if ( arr[0].equals("ls") || arr[0].equals("put") ||
+						arr[0].equals("get") || arr[0].equals("cp") ||
+						arr[0].equals("rm"))
+				{
+					m = m + " " + token;
+					w.write(m,0,m.length());
+				}
+				else if ( arr[0].equals("login")) {
+					w.write(m,0,m.length());
+				}
+				else System.out.println("Invalid command");
+				
 				w.newLine();
 				w.flush();
+	
 			}
 
 		}catch (IOException e) {
