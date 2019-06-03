@@ -17,16 +17,15 @@ import javax.net.ssl.SSLSocket;
 public class FServerAccessControl {
 
 	private static final String SERVERTLS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/servertls.conf";
-	private static final String ACCESS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/access.conf";
+	private static final String ROOT = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/";
 	private static Properties properties, accessprops;
 
 
 	public static void main(String[] args) {
-		System.setProperty("javax.net.debug", "all");   
+//		System.setProperty("javax.net.debug", "all");   
 
 		try {
 			properties = loadProperties(SERVERTLS_CONFIG_PATH);
-			accessprops = loadProperties(ACCESS_CONFIG_PATH);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -71,11 +70,25 @@ public class FServerAccessControl {
 					c.getInputStream()));
 			
 			String m = null;
+			String[] arr = null;
 			while ( true ) {
 				
 				m = r.readLine();
+				arr = m.split(" ");
 				
-				m =  accessprops.getProperty(m);
+				String path = arr[0];
+				String user = arr[1];
+				
+				try {
+					path = ROOT + "/" + path + "access.conf";
+					System.out.println("a tentar aceder: path");
+					accessprops = loadProperties(path);
+				}catch (Exception e) {
+					System.err.println(e.toString());
+				}
+				
+				m = accessprops.getProperty(user);
+				System.out.println("permissoes de (" + user + "): " + m);
 				
 				w.write(m,0,m.length());
 				w.newLine();

@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.InetAddress;
+import java.io.UnsupportedEncodingException;
 import java.security.KeyStore;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -28,20 +30,22 @@ public class FServerAuth {
 	private static final String SERVERTLS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/servertls.conf";
 	private static Properties properties;
 
-	public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException {
+	public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
 
 		//efeito de teste (1 utilizador pode-se add +)
 		String username = "miguel";
 		String email = "miguel@g.com";
 		String nome = "Miguel Araujo";
 		byte[] salt = generateSalt();
-		byte[] pw = getEncryptedPassword("araujo", salt);
-		
+		MessageDigest md = MessageDigest.getInstance("MD5");
+		byte[] hashedpw = md.digest("1234".getBytes());
+		byte[] pw = getEncryptedPassword( Base64.getEncoder().encodeToString(hashedpw), salt);
+
 		HashMap < String, Account > accounts = new HashMap<String, Account >();
 		accounts.put( username, new Account(username, email, nome, pw, salt));
 
 		//debug
-		System.setProperty("javax.net.debug", "all");   
+		//		System.setProperty("javax.net.debug", "all");   
 
 		try {
 			properties = loadProperties(SERVERTLS_CONFIG_PATH);
@@ -90,19 +94,20 @@ public class FServerAuth {
 
 			String m = null;
 			while ( true ) {
-				
 				m = r.readLine();
 				String[] arr = m.split(" ");
-				
+
 				username = arr[0];
 				Account acc = accounts.get(username);
-				
-				if ( authenticate(arr[1], acc.getPw(), acc.getSalt()) ) {
-					m = username + ":" + email + ":" + nome + ":" + acc.getPw() + ":" + acc.getSalt() + ":" + "TRUE";
+
+				if ( authenticate(arr[1], acc.pw, acc.salt) ) {
+
+					m = username + ":" + email + ":" + nome + ":" + Base64.getEncoder().encodeToString(acc.pw) + ":" + Base64.getEncoder().encodeToString(acc.salt) + ":" + "TRUE";
 					System.out.println(m);
 				}
 				else {
 					m = "FALSE";
+					System.out.println(m);
 				}
 
 				w.write(m,0,m.length());
@@ -159,7 +164,7 @@ public class FServerAuth {
 		return f.generateSecret(spec).getEncoded();
 	}
 
-	public static byte[] generateSalt() throws NoSuchAlgorithmException {
+	public static byte[] generateSalt() throws NoSuchAlgorithmException{
 		// VERY important to use SecureRandom instead of just Random
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
 
@@ -182,27 +187,6 @@ public class FServerAuth {
 			this.pw = pw;
 			this.salt = salt;
 		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getEmail() {
-			return email;
-		}
-
-		public String getNome() {
-			return nome;
-		}
-
-		public byte[] getPw() {
-			return pw;
-		}
-
-		public byte[] getSalt() {
-			return salt;
-		}
-
 	}
 }
 

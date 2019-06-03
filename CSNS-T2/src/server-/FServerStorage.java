@@ -1,9 +1,12 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.security.KeyStore;
 import java.util.Properties;
@@ -18,11 +21,11 @@ public class FServerStorage {
 
 	private static final String SERVERTLS_CONFIG_PATH = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/server-/servertls.conf";
 	private static Properties properties;
-	private static final String ROOT = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/storage-";
-	
+	private static final String ROOT = "/home/sd2018/git/SRSC_T2/CSNS-T2/src/storage-/";
+
 	public static void main(String[] args) {
-		
-		System.setProperty("javax.net.debug", "all");   
+
+		//		System.setProperty("javax.net.debug", "all");   
 
 		try {
 			properties = loadProperties(SERVERTLS_CONFIG_PATH);
@@ -68,23 +71,46 @@ public class FServerStorage {
 					c.getOutputStream()));
 			BufferedReader r = new BufferedReader(new InputStreamReader(
 					c.getInputStream()));
-			
+
 			String m = null;
+
 			while ( true ) {
-				
+
 				m = r.readLine();
-				
+				System.out.println("m = " + m);
+				String[] arr = m.split(" ");
+
+				if( arr[0].equals("ls")) {
+					File folder = new File(ROOT + m);
+					File[] listOfFiles = folder.listFiles();
+					m = "";
+					for ( int i = 0; i< listOfFiles.length; i++) {
+						if ( i == 0)
+							m = listOfFiles[i].getName();
+						else m = m + " " + listOfFiles[i].getName();
+					}
+				}
+				else if( arr[0].equals("put")) {
+					String username = arr[1];
+					String filename = arr[2];
+					InputStream is = c.getInputStream();
+			        OutputStream os = new FileOutputStream(ROOT + username + "/" + filename);
+			        copy(is, os);
+			        os.close();
+			        is.close();
+				}
+
 				w.write(m,0,m.length());
 				w.newLine();
 				w.flush();
 			}
-			
-			
+
+
 		}catch (Exception e) {
 			System.err.println(e.toString());
 		}
 	}
-	
+
 	private static Properties loadProperties(String path) throws IOException {
 		InputStream inputStream = new FileInputStream(path);
 
@@ -94,16 +120,13 @@ public class FServerStorage {
 		inputStream.close();
 		return properties;
 	}
+	
+	static void copy(InputStream in, OutputStream out) throws IOException {
+        byte[] buf = new byte[8192];
+        int len = 0;
+        while ((len = in.read(buf)) != -1) {
+            out.write(buf, 0, len);
+        }
+    }
 }
-	
-	File folder = new File("your/path");
-	File[] listOfFiles = folder.listFiles();
 
-	for (int i = 0; i < listOfFiles.length; i++) {
-	  if (listOfFiles[i].isFile()) {
-	    System.out.println("File " + listOfFiles[i].getName());
-	  } else if (listOfFiles[i].isDirectory()) {
-	    System.out.println("Directory " + listOfFiles[i].getName());
-	  }
-	}
-	
