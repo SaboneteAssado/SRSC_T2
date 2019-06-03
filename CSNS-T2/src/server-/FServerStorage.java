@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.channels.FileChannel;
 import java.security.KeyStore;
 import java.util.Properties;
 
@@ -81,26 +82,80 @@ public class FServerStorage {
 				String[] arr = m.split(" ");
 
 				if( arr[0].equals("ls")) {
-					File folder = new File(ROOT + m);
+					String user = arr[1];
+					File folder = new File(ROOT + user);
 					File[] listOfFiles = folder.listFiles();
-					m = "";
-					for ( int i = 0; i< listOfFiles.length; i++) {
-						if ( i == 0)
-							m = listOfFiles[i].getName();
-						else m = m + " " + listOfFiles[i].getName();
+					if ( listOfFiles.length == 0){
+						m = "Folder empty";
+						w.write(m,0,m.length());
+					}else {
+						m = "";
+						for ( int i = 0; i< listOfFiles.length; i++) {
+							if ( i == 0)
+								m = listOfFiles[i].getName();
+							else m = m + " " + listOfFiles[i].getName();
+							w.write(m,0,m.length());
+						}
 					}
 				}
 				else if( arr[0].equals("put")) {
 					String username = arr[1];
 					String filename = arr[2];
 					InputStream is = c.getInputStream();
-			        OutputStream os = new FileOutputStream(ROOT + username + "/" + filename);
-			        copy(is, os);
-			        os.close();
+					OutputStream os = new FileOutputStream(ROOT + username + "/" + filename);
+					copy(is, os);
+					os.close();
+					is.close();
+				}
+				else if( arr[0].equals("get")) {
+					String username = arr[1];
+					String filename = arr[2];
+					InputStream is = new FileInputStream(ROOT + username + "/" + filename);
+					System.out.println("houve input");
+					OutputStream os = c.getOutputStream();
+					System.out.println("houve output");
+					
+					copy(is, os);
+					
+					System.out.println("consegui copiar");
+					os.close();
+					System.out.println("fechei os");
+					
 			        is.close();
+					System.out.println("fechei is");
+					m = "conseguido";
+					w.write(m,0,m.length());
+				}
+				else if( arr[0].equals("rm")) {
+					String username = arr[1];
+					String filename = arr[2];
+					File file = new File(ROOT + username + "/" + filename);
+					file.delete();
+					m = "removed";
+					w.write(m,0,m.length());
+				}
+				else if( arr[0].equals("cp")) {
+					String username = arr[1];
+					String filename1 = arr[2];
+					String filename2 = arr[3];
+					FileChannel sourceChannel = null;
+					FileChannel destinationChannel = null;
+
+					FileInputStream is = new FileInputStream(ROOT + username + "/" + filename1);
+					FileOutputStream os = new FileOutputStream(ROOT + username + "/" + filename2);
+					sourceChannel = is.getChannel();
+					destinationChannel = os.getChannel();
+					destinationChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+
+					sourceChannel.close();
+					destinationChannel.close();
+					is.close();
+					os.close();
+
+					m = "copied";
+					w.write(m,0,m.length());
 				}
 
-				w.write(m,0,m.length());
 				w.newLine();
 				w.flush();
 			}
@@ -120,13 +175,13 @@ public class FServerStorage {
 		inputStream.close();
 		return properties;
 	}
-	
+
 	static void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[8192];
-        int len = 0;
-        while ((len = in.read(buf)) != -1) {
-            out.write(buf, 0, len);
-        }
-    }
+		byte[] buf = new byte[8192];
+		int len = 0;
+		while ((len = in.read(buf)) != -1) {
+			out.write(buf, 0, len);
+		}
+	}
 }
 

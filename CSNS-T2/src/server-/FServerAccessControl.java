@@ -81,14 +81,12 @@ public class FServerAccessControl {
 				
 				try {
 					path = ROOT + "/" + path + "access.conf";
-					System.out.println("a tentar aceder: path");
 					accessprops = loadProperties(path);
 				}catch (Exception e) {
 					System.err.println(e.toString());
 				}
 				
 				m = accessprops.getProperty(user);
-				System.out.println("permissoes de (" + user + "): " + m);
 				
 				w.write(m,0,m.length());
 				w.newLine();

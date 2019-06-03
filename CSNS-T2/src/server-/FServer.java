@@ -134,13 +134,13 @@ public class FServer {
 				}
 
 				else if ( arr[0].equals("put") ) {
-					if ( arr.length == 5) {
+					if ( arr.length == 4) {
 						String username = arr[1];
-						String path = arr[2];
+						String filename = arr[2];
 						String token = arr[3];
-						String filename = arr[4];
 						Tokeninfo info = tokens.get(token);
-						put(username, info, path, filename, f, w, r, c);
+						System.out.println("vou iniciar o metodo put");
+						put(username, info, filename, f, w, r, c);
 					}
 					else {
 						m = "arg size != 3";
@@ -152,9 +152,10 @@ public class FServer {
 				else if ( arr[0].equals("get") ) {
 					if ( arr.length == 4) {
 						String username = arr[1];
-						String path = arr[2];
+						String filename = arr[2];
 						String token = arr[3];
 						Tokeninfo info = tokens.get(token);
+						get(username, info, filename, f, w, r, c);
 					}
 					else {
 						m = "arg size != 3";
@@ -165,10 +166,11 @@ public class FServer {
 				else if ( arr[0].equals("cp") ) {
 					if ( arr.length == 5) {
 						String username = arr[1];
-						String path1 = arr[2];
-						String path2 = arr[3];
+						String file1 = arr[2];
+						String file2 = arr[3];
 						String token = arr[4];
 						Tokeninfo info = tokens.get(token);
+						cp(username, info, file1, file2, f, w);
 					}
 					else {
 						m = "arg size != 4";
@@ -178,10 +180,12 @@ public class FServer {
 
 				else if ( arr[0].equals("rm") ) {
 					if ( arr.length == 4) {
+						System.out.println("percebi que era o rm");
 						String username = arr[1];
-						String path = arr[2];
+						String filename = arr[2];
 						String token = arr[3];
 						Tokeninfo info = tokens.get(token);
+						rm(username, info, filename, f, w);;
 					}
 					else {
 						m = "arg size != 3";
@@ -217,7 +221,7 @@ public class FServer {
 			throws UnknownHostException, IOException {
 		String m;
 		if ( info != null ) {
-			if ( tokenCheck(info.expire)){
+			if ( System.currentTimeMillis() >	info.expire + 300000){
 				m = "Token revoked, please reauthenticate";
 				w.write(m);
 			}
@@ -272,12 +276,12 @@ public class FServer {
 		}
 	}
 	
-	private static void put(String username, Tokeninfo info, String path, String filename,
-			SSLSocketFactory f, BufferedWriter w, BufferedReader r, SSLSocket c)
+	private static void cp(String username, Tokeninfo info, 
+			String file1, String file2, SSLSocketFactory f, BufferedWriter w)
 			throws UnknownHostException, IOException {
 		String m;
 		if ( info != null ) {
-			if ( tokenCheck(info.expire)){
+			if ( System.currentTimeMillis() >	info.expire + 300000){
 				m = "Token revoked, please reauthenticate";
 				w.write(m);
 			}
@@ -304,13 +308,133 @@ public class FServer {
 					m = "Access Denied";
 					w.write(m,0,m.length());
 				}
+				else if ( arr[0].equals("allow") ){
+					for ( int i = 1; i<arr.length; i++) {
+						if( arr[i].equals("read")) {
+
+							tempc = (SSLSocket) f.createSocket("localhost", 9003 );
+							tempc.startHandshake();
+
+							tempw = new BufferedWriter(new OutputStreamWriter(
+									tempc.getOutputStream()));
+							tempr = new BufferedReader(new InputStreamReader(
+									tempc.getInputStream()));
+
+							m = "cp " + username + " " + file1 + " " + file2;
+
+							tempw.write(m,0,m.length());
+							tempw.newLine();
+							tempw.flush();
+
+							m = tempr.readLine();
+							w.write(m,0,m.length());
+						}
+					}
+				}
+			}
+
+		}
+	}
+	
+	private static void rm(String username, Tokeninfo info, String filename, SSLSocketFactory f, BufferedWriter w)
+			throws UnknownHostException, IOException {
+		String m;
+		if ( info != null ) {
+			if ( System.currentTimeMillis() >	info.expire + 300000){
+				m = "Token revoked, please reauthenticate";
+				w.write(m);
+			}
+			else {
+				SSLSocket tempc = (SSLSocket) f.createSocket("localhost", 9002 );
+
+				tempc.startHandshake();
+
+				BufferedWriter tempw = new BufferedWriter(new OutputStreamWriter(
+						tempc.getOutputStream()));
+				BufferedReader tempr = new BufferedReader(new InputStreamReader(
+						tempc.getInputStream()));
+
+				m = username + " " + info.nome;
+
+				tempw.write(m,0,m.length());
+				tempw.newLine();
+				tempw.flush();
+
+				m = tempr.readLine();
+				String[] arr = m.split(" ");
+
+				if ( arr[0].equals("denied")) {
+					m = "Access Denied";
+					w.write(m,0,m.length());
+				}
+				else if ( arr[0].equals("allow") ){
+					for ( int i = 1; i<arr.length; i++) {
+						if( arr[i].equals("write")) {
+
+							tempc = (SSLSocket) f.createSocket("localhost", 9003 );
+							tempc.startHandshake();
+
+							tempw = new BufferedWriter(new OutputStreamWriter(
+									tempc.getOutputStream()));
+							tempr = new BufferedReader(new InputStreamReader(
+									tempc.getInputStream()));
+
+							m = "rm " + username + " " + filename;
+
+							tempw.write(m,0,m.length());
+							tempw.newLine();
+							tempw.flush();
+
+							m = tempr.readLine();
+							w.write(m,0,m.length());
+						}
+					}
+				}
+			}
+
+		}
+	}
+	
+	private static void put(String username, Tokeninfo info, String filename,			SSLSocketFactory f, BufferedWriter w, BufferedReader r, SSLSocket c)
+			throws UnknownHostException, IOException {
+		String m;
+		if ( info != null ) {
+			if ( System.currentTimeMillis() >	info.expire + 300000){
+				m = "Token revoked, please reauthenticate";
+				w.write(m);
+			}
+			else {
+				SSLSocket tempc = (SSLSocket) f.createSocket("localhost", 9002 );
+
+				tempc.startHandshake();
+				
+				BufferedWriter tempw = new BufferedWriter(new OutputStreamWriter(
+						tempc.getOutputStream()));
+				BufferedReader tempr = new BufferedReader(new InputStreamReader(
+						tempc.getInputStream()));
+
+				m = username + " " + info.nome;
+
+
+				tempw.write(m,0,m.length());
+				System.out.println("pedi as permissoes com m = " + m);
+				tempw.newLine();
+				tempw.flush();
+
+				m = tempr.readLine();
+				String[] arr = m.split(" ");
+
+				if ( arr[0].equals("denied")) {
+					m = "Access Denied";
+					w.write(m,0,m.length());
+				}
 				else if ( arr[0].equals("allow")){
 					for ( int i = 1; i<arr.length; i++) {
 						if( arr[i].equals("write")) {
 							
 							tempc = (SSLSocket) f.createSocket("localhost", 9003 );
 							tempc.startHandshake();
-
+							
 							tempw = new BufferedWriter(new OutputStreamWriter(
 									tempc.getOutputStream()));
 							tempr = new BufferedReader(new InputStreamReader(
@@ -324,14 +448,99 @@ public class FServer {
 
 							m = tempr.readLine();
 							
-							m = "file";
+							m = "putfile";
 							w.write(m,0,m.length());
-					        
+							w.newLine();
+							w.flush();
+							
 					        InputStream is = c.getInputStream();
 					        OutputStream os = tempc.getOutputStream();
 					        copy(is, os);
 					        os.close();
 					        is.close();
+					        
+					        m = tempr.readLine();
+							w.write(m,0,m.length());
+						}
+					}
+				}
+			}
+
+		}
+	}
+	
+	private static void get(String username, Tokeninfo info, String filename,			SSLSocketFactory f, BufferedWriter w, BufferedReader r, SSLSocket c)
+			throws UnknownHostException, IOException {
+		String m;
+		if ( info != null ) {
+			System.out.println("ver o token");
+			if ( System.currentTimeMillis() >	info.expire + 300000){
+				m = "Token revoked, please reauthenticate";
+				w.write(m);
+			}
+			else {
+				SSLSocket tempc = (SSLSocket) f.createSocket("localhost", 9002 );
+
+				tempc.startHandshake();
+
+				System.out.println("handshake feitinho");
+				
+				BufferedWriter tempw = new BufferedWriter(new OutputStreamWriter(
+						tempc.getOutputStream()));
+				BufferedReader tempr = new BufferedReader(new InputStreamReader(
+						tempc.getInputStream()));
+
+				m = username + " " + info.nome;
+
+
+				tempw.write(m,0,m.length());
+				System.out.println("pedi as permissoes com m = " + m);
+				tempw.newLine();
+				tempw.flush();
+
+				m = tempr.readLine();
+				String[] arr = m.split(" ");
+
+				if ( arr[0].equals("denied")) {
+					m = "Access Denied";
+					w.write(m,0,m.length());
+				}
+				else if ( arr[0].equals("allow")){
+					for ( int i = 1; i<arr.length; i++) {
+						if( arr[i].equals("read")) {
+							
+							System.out.println("tive permissao para ler");
+							
+							tempc = (SSLSocket) f.createSocket("localhost", 9003 );
+							tempc.startHandshake();
+
+							System.out.println("handhsake com a storage");
+							
+							tempw = new BufferedWriter(new OutputStreamWriter(
+									tempc.getOutputStream()));
+							tempr = new BufferedReader(new InputStreamReader(
+									tempc.getInputStream()));
+
+							m = "get " + username + " " + filename;
+
+							tempw.write(m,0,m.length());
+							tempw.newLine();
+							tempw.flush();
+
+							m = tempr.readLine();
+							
+							m = "getfile " + filename;
+							w.write(m,0,m.length());
+							w.newLine();
+							w.flush();
+							System.out.println("mandei ao cliente getfile");
+							
+					        InputStream is = tempc.getInputStream();
+					        OutputStream os = c.getOutputStream();
+					        copy(is, os);
+					        
+					        is.close();
+					        os.close();
 					        
 							w.write(m,0,m.length());
 						}
@@ -376,19 +585,10 @@ public class FServer {
 			MessageDigest md = MessageDigest.getInstance("MD5");
 			byte[] hash = md.digest(bytes);
 			String token = Base64.getEncoder().encodeToString(hash);
-			tokens.put( token, new Tokeninfo(username, System.currentTimeMillis()+ 300000) );
+			tokens.put( token, new Tokeninfo(username, System.currentTimeMillis()));
 			m = "LoginSuccess " + token;
 			w.write(m, 0, m.length());
 		}
-	}
-
-	private static boolean tokenCheck( Long expire) {
-		if ( System.currentTimeMillis() >	expire ) {
-			System.out.println("tempo do sistema = " + System.currentTimeMillis());
-			System.out.println("tempo limite do token = " + expire);
-			return false;
-		}
-		else return true;
 	}
 	
 	static void copy(InputStream in, OutputStream out) throws IOException {

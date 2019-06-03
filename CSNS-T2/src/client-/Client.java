@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -69,18 +70,18 @@ public class Client {
 
 			String m = null;
 			String[] arr = null;
+			
+			InputStream is = null;
+			OutputStream os = null;
 
 			while ((m=r.readLine())!= null) {
-//				String[] trimtoken = m.split(" ");
-//				trimtoken[trimtoken.length-1] = "";
-//				m =trimtoken.toString();
-				
+
 				out.println(m);
+
 				arr = m.split(" ");
 
 				if ( arr[0].equals("LoginSuccess") ) {
 					token = arr[1];
-					System.out.println(token);
 					out.println("Successful Login Attempt");
 				}
 				else if ( arr[0].equals("LoginFailed") ) {
@@ -95,6 +96,23 @@ public class Client {
 				else if ( arr[0].equals("deny") ) {
 					out.println("Access Denied");
 				}
+				else if ( arr[0].equals("putfile")) {
+					is = new FileInputStream(arr[2]);
+					os = c.getOutputStream();
+					copy(is, os);
+				}
+				else if ( arr[0].equals("getfile")) {
+					is = c.getInputStream();
+					os = new FileOutputStream(arr[1]);
+					copy(is, os);
+				}
+				else if ( arr[0].equals("removed")){
+					out.println("file removed");
+				}
+				else if ( arr[0].equals("copied")){
+					out.println("file copied");
+				}
+
 
 				m=in.readLine();
 				arr = m.split(" ");
@@ -103,34 +121,17 @@ public class Client {
 					m = m + " " + token;
 					w.write(m, 0, m.length());
 				}
-				//apenas nome do ficheiro root folder
-				else if ( arr[0].equals("put") ) {
+				else if ( arr[0].equals("rm") || arr[0].equals("get") ||
+						arr[0].equals("put") || arr[0].equals("cp")) {
 					m = m + " " + token ;
+					System.out.println(m);
 					w.write(m, 0, m.length());
-					if ( r.readLine().equals("file")){
-						InputStream is = new FileInputStream(arr[2]);
-				        OutputStream os = c.getOutputStream();
-				        copy(is, os);
-				        os.close();
-				        is.close();
-					}
-				}
-				else if ( arr[0].equals("get") ) {
-					
-				}
-				else if ( arr[0].equals("rm") ) {
-					
-				}
-				else if ( arr[0].equals("cp")) {
-					
 				}
 				else if ( arr[0].equals("login")) {
 					MessageDigest md = MessageDigest.getInstance("MD5");
 					byte[] hashedpw = md.digest(arr[2].getBytes());
 					arr[2] = Base64.getEncoder().encodeToString(hashedpw);
-					System.out.println(arr[2]);
 					m = String.join(" ", arr);
-					System.out.println(m);
 					w.write(m,0,m.length());
 				}
 				else System.out.println("Invalid command");
@@ -138,18 +139,19 @@ public class Client {
 				w.newLine();
 				w.flush();
 			}
-
 		}catch (IOException e) {
 			System.err.println(e.toString());
 		}
 	}
-	
+
+
 	static void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[8192];
-        int len = 0;
-        while ((len = in.read(buf)) != -1) {
-            out.write(buf, 0, len);
-        }
-    }
+		byte[] buf = new byte[8192];
+		int len = 0;
+		while ((len = in.read(buf)) != -1) {
+			out.write(buf, 0, len);
+		}
+	}
 }
+
 
